@@ -1,6 +1,10 @@
 import { Router } from "express";
-import { readFileSync } from "fs";
-import { join } from "path";
+
+// Static imports — esbuild bundles these directly into the function.
+// This eliminates all process.cwd() / readFileSync path guessing that
+// fails in Vercel's serverless runtime.
+import settingsRaw from "../data/settings.json";
+import classificationRaw from "../data/settings-classification.json";
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 
@@ -26,67 +30,19 @@ interface Setting {
   settingType?: string;
 }
 
-// ── Load classification data ──────────────────────────────────────────────────
-
 type ClassificationMap = Record<string, {
   settingHeight: string;
   bandType: string;
   settingType: string;
 }>;
 
-let classification: ClassificationMap = {};
-try {
-  const candidates = [
-    join(process.cwd(), "api-server", "src", "data", "settings-classification.json"),
-    join(process.cwd(), "src", "data", "settings-classification.json"),
-    join(process.cwd(), "artifacts", "api-server", "src", "data", "settings-classification.json"),
-  ];
-  let clPath = candidates[0];
-  for (const p of candidates) {
-    try { readFileSync(p); clPath = p; break; } catch { /* try next */ }
-  }
-  classification = JSON.parse(readFileSync(clPath, "utf8")) as ClassificationMap;
-  console.info(`Loaded classification for ${Object.keys(classification).length} settings`);
-} catch (e) {
-  console.warn("Could not load settings-classification.json — filter fields will be empty:", e);
-}
-
-// ── Load settings data ────────────────────────────────────────────────────────
-
-let allSettings: Setting[] = [];
-try {
-  const candidates = [
-    join(process.cwd(), "api-server", "src", "data", "settings.json"),
-    join(process.cwd(), "src", "data", "settings.json"),
-    join(process.cwd(), "artifacts", "api-server", "src", "data", "settings.json"),
-  ];
-  let dataPath = candidates[0];
-  for (const p of candidates) {
-    try { readFileSync(p); dataPath = p; break; } catch { /* try next */ }
-  }
-  const raw = readFileSync(dataPath, "utf8");
-  const parsed = JSON.parse(raw) as Setting[];
-  allSettings = parsed
-    .filter((s) => s.handle && s.title && s.variants?.length > 0 && hasUsableDisplayImage(s))
-    .map((s) => {
-      const cl = classification[s.handle];
-      if (cl) {
-        return { ...s, settingHeight: cl.settingHeight, bandType: cl.bandType, settingType: cl.settingType };
-      }
-      return s;
-    });
-  console.info(`Loaded ${allSettings.length} valid ring settings from ${dataPath}`);
-} catch (e) {
-  console.error("Failed to load settings.json — ring settings will be empty:", e);
-}
-
 // ── Product visibility ────────────────────────────────────────────────────────
 
 function hasUsableDisplayImage(s: Setting): boolean {
   return s.images.some(u => {
-    const f = u.split('/').pop() ?? '';
-    if (f.endsWith('.gif')) return false;
-    return f.endsWith('.jpg');
+    const f = u.split("/").pop() ?? "";
+    if (f.endsWith(".gif")) return false;
+    return f.endsWith(".jpg");
   });
 }
 
@@ -96,6 +52,22 @@ function getMinPrice(s: Setting): number {
   if (!s.variants.length) return 0;
   return Math.min(...s.variants.map((v) => v.price));
 }
+
+// ── Load data from static imports ─────────────────────────────────────────────
+
+const classification = classificationRaw as unknown as ClassificationMap;
+
+const allSettings: Setting[] = (settingsRaw as unknown as Setting[])
+  .filter((s) => s.handle && s.title && s.variants?.length > 0 && hasUsableDisplayImage(s))
+  .map((s) => {
+    const cl = classification[s.handle];
+    if (cl) {
+      return { ...s, settingHeight: cl.settingHeight, bandType: cl.bandType, settingType: cl.settingType };
+    }
+    return s;
+  });
+
+console.info(`Loaded ${allSettings.length} valid ring settings (static bundle)`);
 
 // ── Router ────────────────────────────────────────────────────────────────────
 
@@ -129,7 +101,10 @@ router.get("/settings", (req, res) => {
     if (settingType && s.settingType !== settingType) return false;
     if (q) {
       const query = q.toLowerCase();
-      if (!s.title.toLowerCase().includes(query) && !s.tags.some((t) => t.toLowerCase().includes(query))) return false;
+      if (
+        !s.title.toLowerCase().includes(query) &&
+        !s.tags.some((t) => t.toLowerCase().includes(query))
+      ) return false;
     }
     const cheapest = getMinPrice(s);
     if (minP != null && cheapest < minP) return false;
