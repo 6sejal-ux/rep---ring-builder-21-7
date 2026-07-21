@@ -1,0 +1,14 @@
+{
+  "buildCommand": "pnpm install --no-frozen-lockfile && pnpm --filter @workspace/ring-builder run build",
+  "outputDirectory": "ring-builder/dist/public",
+  "framework": null,
+  "rewrites": [
+    { "source": "/api/(.*)", "destination": "/api/index" },
+    { "source": "/(.*)",     "destination": "/index.html" }
+  ],
+  "functions": {
+    "api/index.ts": {
+      "includeFiles": "api-server/src/data/**"
+    }
+  }
+}
