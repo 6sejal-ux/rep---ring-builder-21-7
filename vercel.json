@@ -1,5 +1,5 @@
 {
-  "buildCommand": "cd ring-builder && pnpm run build",
+ "buildCommand": "pnpm --dir ring-builder install --no-frozen-lockfile && pnpm --dir ring-builder run build",
   "outputDirectory": "ring-builder/dist/public",
   "framework": null,
   "rewrites": [
