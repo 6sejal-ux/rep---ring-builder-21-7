@@ -37,14 +37,11 @@ type ClassificationMap = Record<string, {
 
 let classification: ClassificationMap = {};
 try {
-  const candidates = [
+    const candidates = [
+    join(process.cwd(), "api-server", "src", "data", "settings-classification.json"),
     join(process.cwd(), "src", "data", "settings-classification.json"),
     join(process.cwd(), "artifacts", "api-server", "src", "data", "settings-classification.json"),
   ];
-  let clPath = candidates[0];
-  for (const p of candidates) {
-    try { readFileSync(p); clPath = p; break; } catch { /* try next */ }
-  }
   classification = JSON.parse(readFileSync(clPath, "utf8")) as ClassificationMap;
   console.info(`Loaded classification for ${Object.keys(classification).length} settings`);
 } catch (e) {
@@ -55,7 +52,8 @@ try {
 
 let allSettings: Setting[] = [];
 try {
-  const candidates = [
+    const candidates = [
+    join(process.cwd(), "api-server", "src", "data", "settings.json"),
     join(process.cwd(), "src", "data", "settings.json"),
     join(process.cwd(), "artifacts", "api-server", "src", "data", "settings.json"),
   ];
