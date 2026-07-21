@@ -21,7 +21,6 @@ interface Setting {
   tags: string[];
   images: string[];
   variants: SettingVariant[];
-  // Classification fields (merged from CSV)
   settingHeight?: string;
   bandType?: string;
   settingType?: string;
@@ -37,11 +36,15 @@ type ClassificationMap = Record<string, {
 
 let classification: ClassificationMap = {};
 try {
-    const candidates = [
+  const candidates = [
     join(process.cwd(), "api-server", "src", "data", "settings-classification.json"),
     join(process.cwd(), "src", "data", "settings-classification.json"),
     join(process.cwd(), "artifacts", "api-server", "src", "data", "settings-classification.json"),
   ];
+  let clPath = candidates[0];
+  for (const p of candidates) {
+    try { readFileSync(p); clPath = p; break; } catch { /* try next */ }
+  }
   classification = JSON.parse(readFileSync(clPath, "utf8")) as ClassificationMap;
   console.info(`Loaded classification for ${Object.keys(classification).length} settings`);
 } catch (e) {
@@ -52,7 +55,7 @@ try {
 
 let allSettings: Setting[] = [];
 try {
-    const candidates = [
+  const candidates = [
     join(process.cwd(), "api-server", "src", "data", "settings.json"),
     join(process.cwd(), "src", "data", "settings.json"),
     join(process.cwd(), "artifacts", "api-server", "src", "data", "settings.json"),
@@ -116,18 +119,14 @@ router.get("/settings", (req, res) => {
   const maxP = maxPrice ? parseFloat(maxPrice) : undefined;
 
   let filtered = allSettings.filter((s) => {
-    // Metal: substring match
     if (metal && !s.variants.some((v) =>
       v.metal.toLowerCase().includes(metal.toLowerCase()),
     )) return false;
     if (shape && !s.variants.some((v) => v.shape === shape)) return false;
-    // Style: tag match (legacy — kept for backward compatibility)
     if (style && !s.tags.some((t) => t.toLowerCase() === style.toLowerCase())) return false;
-    // Classification filters
     if (settingHeight && s.settingHeight !== settingHeight) return false;
     if (bandType && s.bandType !== bandType) return false;
     if (settingType && s.settingType !== settingType) return false;
-    // Search
     if (q) {
       const query = q.toLowerCase();
       if (!s.title.toLowerCase().includes(query) && !s.tags.some((t) => t.toLowerCase().includes(query))) return false;
