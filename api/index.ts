@@ -11,6 +11,6 @@
  * Local/Replit development continues to use artifacts/api-server/src/index.ts
  * (which calls app.listen() on the PORT env var).
  */
-import app from "../artifacts/api-server/src/app.js";
+import app from "../api-server/src/app.js";
 
 export default app;
