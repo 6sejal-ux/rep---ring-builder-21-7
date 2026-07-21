@@ -1,0 +1,12 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200" fill="none">
+  <path d="M60,40 Q100,30 140,40 Q160,80 160,100 Q160,120 140,160 Q100,170 60,160 Q40,120 40,100 Q40,80 60,40 Z" stroke="#1a1a2e" stroke-width="1.5" fill="#f0f0f8"/>
+  <path d="M75,65 Q100,58 125,65 Q135,80 135,100 Q135,120 125,135 Q100,142 75,135 Q65,120 65,100 Q65,80 75,65 Z" stroke="#1a1a2e" stroke-width="0.8" fill="#e0e0f0"/>
+  <line x1="60" y1="40" x2="75" y2="65" stroke="#1a1a2e" stroke-width="0.8"/>
+  <line x1="140" y1="40" x2="125" y2="65" stroke="#1a1a2e" stroke-width="0.8"/>
+  <line x1="60" y1="160" x2="75" y2="135" stroke="#1a1a2e" stroke-width="0.8"/>
+  <line x1="140" y1="160" x2="125" y2="135" stroke="#1a1a2e" stroke-width="0.8"/>
+  <line x1="100" y1="30" x2="100" y2="58" stroke="#1a1a2e" stroke-width="0.8"/>
+  <line x1="100" y1="142" x2="100" y2="170" stroke="#1a1a2e" stroke-width="0.8"/>
+  <line x1="40" y1="100" x2="65" y2="100" stroke="#1a1a2e" stroke-width="0.8"/>
+  <line x1="135" y1="100" x2="160" y2="100" stroke="#1a1a2e" stroke-width="0.8"/>
+</svg>

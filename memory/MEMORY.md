@@ -1,0 +1,1 @@
+- [Ring Builder Project](ring-builder-project.md) — architecture, settings data path quirk, metal swatches, credentials needed, zustand store

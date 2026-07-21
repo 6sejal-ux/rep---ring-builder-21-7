@@ -1,0 +1,38 @@
+uploads = []
+generated = []
+
+[[outputs]]
+id = "5mtNQd_EW_HZGfDU4oT_B"
+uri = "file://southern-star-diamonds-ring-builder-complete.zip"
+type = "unspecified"
+title = "Southern Star Diamonds — Ring Builder Complete"
+
+[[outputs]]
+id = "OJD6BRumv9PT_gxZi--lI"
+uri = "file://southern-star-diamonds-ring-builder-github-vercel-ready.zip"
+type = "unspecified"
+title = "Ring Builder — GitHub & Vercel Ready (ZIP)"
+
+[[outputs]]
+id = "IxKBqNJInE7-oMZKEBK8n"
+uri = "file://docs/ring-settings-classification.csv"
+type = "table"
+title = "Ring Settings Classification — 209 settings (fill & re-upload)"
+
+[[outputs]]
+id = "ThElPUcCAyuVSHYAmDJi_"
+uri = "file://PRODUCT-DATA-LOGIC.md"
+type = "text"
+title = "PRODUCT-DATA-LOGIC.md"
+
+[[outputs]]
+id = "rmI4sfcZ_j4MyYrpbkKae"
+uri = "file://PRODUCT-DATA-TEMPLATE.xlsx"
+type = "table"
+title = "PRODUCT-DATA-TEMPLATE.xlsx"
+
+[[outputs]]
+id = "JRWTPnxFIzuZimEnqwPVv"
+uri = "file://southern-star-ring-builder-github-ready.zip"
+type = "unspecified"
+title = "southern-star-ring-builder-github-ready.zip"

@@ -1,0 +1,429 @@
+openapi: 3.1.0
+info:
+  # Do not change the title, if the title changes, the import paths will be broken
+  title: Api
+  version: 0.1.0
+  description: Southern Star Diamonds Ring Builder API
+servers:
+  - url: /api
+    description: Base API path
+tags:
+  - name: health
+    description: Health operations
+  - name: settings
+    description: Ring settings catalogue
+  - name: diamonds
+    description: Diamond search and retrieval
+  - name: cart
+    description: Shopify cart integration
+  - name: config
+    description: Public configuration
+
+paths:
+  /healthz:
+    get:
+      operationId: healthCheck
+      tags: [health]
+      summary: Health check
+      responses:
+        "200":
+          description: Healthy
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/HealthStatus"
+
+  /settings:
+    get:
+      operationId: listSettings
+      tags: [settings]
+      summary: List ring settings with optional filters
+      parameters:
+        - name: style
+          in: query
+          schema: { type: string }
+        - name: metal
+          in: query
+          schema: { type: string }
+        - name: shape
+          in: query
+          schema: { type: string }
+        - name: minPrice
+          in: query
+          schema: { type: number }
+        - name: maxPrice
+          in: query
+          schema: { type: number }
+        - name: page
+          in: query
+          schema: { type: integer, default: 1 }
+        - name: pageSize
+          in: query
+          schema: { type: integer, default: 24 }
+        - name: sort
+          in: query
+          schema: { type: string, enum: [price-asc, price-desc, name-asc] }
+        - name: q
+          in: query
+          description: Search query
+          schema: { type: string }
+      responses:
+        "200":
+          description: Settings list
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SettingListResponse"
+
+  /settings/{handle}:
+    get:
+      operationId: getSetting
+      tags: [settings]
+      summary: Get a single setting by handle
+      parameters:
+        - name: handle
+          in: path
+          required: true
+          schema: { type: string }
+      responses:
+        "200":
+          description: Setting detail
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Setting"
+        "404":
+          description: Not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiError"
+
+  /diamonds/search:
+    post:
+      operationId: searchDiamonds
+      tags: [diamonds]
+      summary: Search diamonds via Nivoda API (server-side proxy)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/DiamondSearchInput"
+      responses:
+        "200":
+          description: Diamond search results
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DiamondSearchResponse"
+        "503":
+          description: Nivoda API unavailable
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiError"
+
+  /diamonds/validate:
+    post:
+      operationId: validateDiamond
+      tags: [diamonds]
+      summary: Validate a diamond is still available before checkout
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/DiamondValidateInput"
+      responses:
+        "200":
+          description: Validation result
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DiamondValidateResponse"
+
+  /diamonds/{id}:
+    get:
+      operationId: getDiamond
+      tags: [diamonds]
+      summary: Get a single diamond by Nivoda ID
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: { type: string }
+      responses:
+        "200":
+          description: Diamond detail
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Diamond"
+        "404":
+          description: Not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiError"
+
+  /cart/create:
+    post:
+      operationId: createCart
+      tags: [cart]
+      summary: Create a Shopify cart with the complete ring configuration
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CartInput"
+      responses:
+        "200":
+          description: Shopify cart/checkout URL
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CartResponse"
+        "400":
+          description: Invalid configuration
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiError"
+        "503":
+          description: Shopify unavailable
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiError"
+
+  /config:
+    get:
+      operationId: getPublicConfig
+      tags: [config]
+      summary: Get public builder configuration (shapes, metals, markups, feature flags)
+      responses:
+        "200":
+          description: Public configuration
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PublicConfig"
+
+components:
+  schemas:
+    HealthStatus:
+      type: object
+      properties:
+        status:
+          type: string
+      required: [status]
+
+    ApiError:
+      type: object
+      properties:
+        error:
+          type: string
+        code:
+          type: string
+      required: [error]
+
+    SettingVariant:
+      type: object
+      properties:
+        sku:      { type: string }
+        price:    { type: number }
+        metal:    { type: string }
+        shape:    { type: string }
+        image:    { type: string }
+        videoUrl: { type: ["string", "null"] }
+      required: [sku, price, metal, shape, image]
+
+    Setting:
+      type: object
+      properties:
+        handle:      { type: string }
+        title:       { type: string }
+        description: { type: string }
+        productType: { type: string }
+        tags:
+          type: array
+          items: { type: string }
+        images:
+          type: array
+          items: { type: string }
+        variants:
+          type: array
+          items: { $ref: "#/components/schemas/SettingVariant" }
+      required: [handle, title, description, productType, tags, images, variants]
+
+    SettingListResponse:
+      type: object
+      properties:
+        items:
+          type: array
+          items: { $ref: "#/components/schemas/Setting" }
+        total:    { type: integer }
+        page:     { type: integer }
+        pageSize: { type: integer }
+        pages:    { type: integer }
+      required: [items, total, page, pageSize, pages]
+
+    DiamondCertificate:
+      type: object
+      properties:
+        id:              { type: ["string", "null"] }
+        lab:             { type: ["string", "null"] }
+        shape:           { type: string }
+        certNumber:      { type: ["string", "null"] }
+        cut:             { type: ["string", "null"] }
+        carats:          { type: number }
+        clarity:         { type: string }
+        polish:          { type: ["string", "null"] }
+        symmetry:        { type: ["string", "null"] }
+        color:           { type: string }
+        length:          { type: ["number", "null"] }
+        width:           { type: ["number", "null"] }
+        depth:           { type: ["number", "null"] }
+        table:           { type: ["number", "null"] }
+        depthPercentage: { type: ["number", "null"] }
+      required: [shape, carats, clarity, color]
+
+    Diamond:
+      type: object
+      properties:
+        id:              { type: string }
+        price:           { type: number }
+        discount:        { type: ["number", "null"] }
+        supplierPrice:   { type: ["number", "null"] }
+        video:           { type: ["string", "null"] }
+        image:           { type: ["string", "null"] }
+        supplierStockId: { type: ["string", "null"] }
+        certificate:
+          $ref: "#/components/schemas/DiamondCertificate"
+      required: [id, price, certificate]
+
+    DiamondSearchInput:
+      type: object
+      properties:
+        shapes:
+          type: array
+          items: { type: string }
+        caratMin:  { type: number }
+        caratMax:  { type: number }
+        priceMin:  { type: number }
+        priceMax:  { type: number }
+        colors:
+          type: array
+          items: { type: string }
+        clarities:
+          type: array
+          items: { type: string }
+        cuts:
+          type: array
+          items: { type: string }
+        labGrown:  { type: boolean }
+        offset:    { type: integer }
+        limit:     { type: integer }
+        sortBy:    { type: string }
+        sortDir:   { type: string, enum: [asc, desc] }
+
+    DiamondSearchResponse:
+      type: object
+      properties:
+        items:
+          type: array
+          items: { $ref: "#/components/schemas/Diamond" }
+        totalCount: { type: integer }
+        offset:     { type: integer }
+        limit:      { type: integer }
+      required: [items, totalCount, offset, limit]
+
+    DiamondValidateInput:
+      type: object
+      properties:
+        nivodaId: { type: string }
+      required: [nivodaId]
+
+    DiamondValidateResponse:
+      type: object
+      properties:
+        available:     { type: boolean }
+        currentPrice:  { type: ["number", "null"] }
+        priceChanged:  { type: boolean }
+        diamond:
+          $ref: "#/components/schemas/Diamond"
+      required: [available, priceChanged]
+
+    CartLineItem:
+      type: object
+      properties:
+        settingHandle:   { type: string }
+        settingTitle:    { type: string }
+        settingSku:      { type: string }
+        metal:           { type: string }
+        shape:           { type: string }
+        ringSize:        { type: string }
+        engraving:       { type: ["string", "null"] }
+        settingPrice:    { type: number }
+        nivodaId:        { type: string }
+        diamondCarat:    { type: number }
+        diamondColor:    { type: string }
+        diamondClarity:  { type: string }
+        diamondCut:      { type: ["string", "null"] }
+        diamondCert:     { type: ["string", "null"] }
+        diamondLab:      { type: ["string", "null"] }
+        diamondPrice:    { type: number }
+      required: [settingHandle, settingTitle, settingSku, metal, shape, ringSize, settingPrice, nivodaId, diamondCarat, diamondColor, diamondClarity, diamondPrice]
+
+    CartInput:
+      type: object
+      properties:
+        lineItem:
+          $ref: "#/components/schemas/CartLineItem"
+      required: [lineItem]
+
+    CartResponse:
+      type: object
+      properties:
+        checkoutUrl: { type: string }
+        cartId:      { type: ["string", "null"] }
+      required: [checkoutUrl]
+
+    MetalOption:
+      type: object
+      properties:
+        label:  { type: string }
+        karat:  { type: string }
+        tone:   { type: string }
+      required: [label, karat, tone]
+
+    ShapeOption:
+      type: object
+      properties:
+        label:     { type: string }
+        nivodaKey: { type: string }
+      required: [label, nivodaKey]
+
+    PublicConfig:
+      type: object
+      properties:
+        metals:
+          type: array
+          items: { $ref: "#/components/schemas/MetalOption" }
+        shapes:
+          type: array
+          items: { $ref: "#/components/schemas/ShapeOption" }
+        diamondTypes:
+          type: object
+          properties:
+            labGrown: { type: boolean }
+            natural:  { type: boolean }
+          required: [labGrown, natural]
+        currency:       { type: string }
+        engravingEnabled: { type: boolean }
+        ringSizes:
+          type: array
+          items: { type: string }
+      required: [metals, shapes, diamondTypes, currency, engravingEnabled, ringSizes]

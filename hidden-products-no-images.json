@@ -1,0 +1,15 @@
+[
+  {
+    "productId": "(empty)",
+    "sku": "(none)",
+    "name": "(empty)",
+    "reasonHidden": "NO MEDIA FOUND",
+    "staticImagesFound": [],
+    "gifFound": "NO",
+    "shapesSearched": "",
+    "mediaSearched": [],
+    "brokenUrls": [],
+    "missingMedia": [],
+    "notes": "Empty/placeholder record with no handle, title, or images — likely a data import artefact"
+  }
+]
